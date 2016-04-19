@@ -76,6 +76,7 @@ public class TicketClient {
 		}
 		//Exit otherwise
 		else {
+		}
 	}
 	
 	String bestAvailableSeat() {

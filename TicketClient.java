@@ -1,9 +1,18 @@
+/**
+ * Clientside functions
+ * Solves EE422C programming assignment #6
+ * @authors Fatima Abdullah, Jai Bock Lee
+ * @version 1.1 2016-4-20
+ * 
+ * UTEID: faa449, jbl932
+ * Lab Section: 11-12:30pm, Lisa Hua
+ * 
+ */
+
 package assignment6;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
-import java.net.Socket;
+import java.io.*;
+import java.net.*;
 
 class ThreadedTicketClient implements Runnable {
 	String hostname = "127.0.0.1";
@@ -17,16 +26,35 @@ class ThreadedTicketClient implements Runnable {
 	}
 
 	public void run() {
-		System.out.flush();
-		try {
-			Socket echoSocket = new Socket(hostname, TicketServer.PORT);
-			// PrintWriter out =
-			new PrintWriter(echoSocket.getOutputStream(), true);
+		while (true){
+		System.out.flush();									
+		try {							
+			Socket echoSocket = new Socket(hostname, TicketServer.PORTA);
+			PrintWriter out = new PrintWriter(echoSocket.getOutputStream(), true);
+			out.println("Ticket requested.");
 			BufferedReader in = new BufferedReader(new InputStreamReader(echoSocket.getInputStream()));
-			BufferedReader stdIn = new BufferedReader(new InputStreamReader(System.in));
+			while(in.readLine() == null){
+			}
+			System.out.println("Your seat has been assigned, " + threadname);
+			System.out.println();
 			echoSocket.close();
+			break;
 		} catch (Exception e) {
-			e.printStackTrace();
+		}
+		try {
+			Socket echoSocket = new Socket(hostname, TicketServer.PORTB);
+			PrintWriter out = new PrintWriter(echoSocket.getOutputStream(), true);
+			out.println("Ticket requested.");
+			BufferedReader in = new BufferedReader(new InputStreamReader(echoSocket.getInputStream()));
+			while(in.readLine() == null){
+			}
+			System.out.println("Your seat has been assigned, " + threadname);
+			System.out.println();
+			echoSocket.close();
+			break;
+			}
+		catch (Exception e) {
+			}
 		}
 	}
 }
@@ -36,7 +64,7 @@ public class TicketClient {
 	String result = "dummy";
 	String hostName = "";
 	String threadName = "";
-
+	
 	TicketClient(String hostname, String threadname) {
 		tc = new ThreadedTicketClient(this, hostname, threadname);
 		hostName = hostname;
@@ -52,9 +80,7 @@ public class TicketClient {
 	}
 
 	void requestTicket() {
-		// TODO thread.run()
 		tc.run();
-		System.out.println(hostName + "," + threadName + " got one ticket");
 	}
 
 	void sleep() {

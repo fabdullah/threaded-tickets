@@ -1,93 +1,86 @@
-(package assignment6;
+/**
+ * Serverside functions
+ * Solves EE422C programming assignment #6
+ * @authors Fatima Abdullah, Jai Bock Lee
+ * @version 1.1 2016-4-20
+ * 
+ * UTEID: faa449, jbl932
+ * Lab Section: 11-12:30pm, Lisa Hua
+ * 
+ */
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
-import java.net.ServerSocket;
-import java.net.Socket;
-import java.util.ArrayList;
+package assignment6;
 
+import java.io.*;
+import java.net.*;
+	
 public class TicketServer {
-	static int PORT = 2222;
+	static int PORTA;
+	static int PORTB;
 	// EE422C: no matter how many concurrent requests you get,
 	// do not have more than three servers running concurrently
 	final static int MAXPARALLELTHREADS = 3;
-
-	public static void start(int portNumber) throws IOException {
-		initalizeSeats();
-		PORT = portNumber;
-		Runnable serverThread = new ThreadedTicketServer();
-		Thread t = new Thread(serverThread);
+	
+	public static void start(int portNumA, BatesRecitalHall a) throws IOException {
+		PORTA = portNumA;																			
+		Runnable serverThreadA = new ThreadedTicketServer(portNumA,"A", a);
+		Thread t = new Thread(serverThreadA);
 		t.start();
 	}
 	
-	public static void initalizeSeats() {
-		availableSeats = new ArrayList<String>();
-		String seatToAdd;
-		static int NUMSEATS = 28;
-		static int NUMROWS = 24;
-		
-		static List<String> middleSeats = Arrays.asList("108", "109", "110", "111", "112", "113", "114, "115", 
-						  "116", "117", "118", "119", "120", "121");
-		static List<String> sideSeats = Arrays.asList("101", "102", "103", "104", "105", "106", "107", "122", 
-						"123", "124", "125", "126", "127", "128");						  
-		static List<String> frontRows = Arrays.asList("A", "B", "C", "D", "E", "F", "G, "H", "J", "K", "L", "M");
-		static List<String> backRows = Arrays.asList("N", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z");
-		
-		// Middle front seats
-		for(int i=0; i<(NUMROWS/2); i++) {
-			for(int j=0; j<(NUMSEATS/2); j++) {
-				seatToAdd = frontRows[i] + middleSeats[j];
-				availableSeats.add(seatToAdd);
-			}
-		}
-		// Side front seats
-		for(int i=0; i<(NUMROWS/2); i++) {
-			for(int j=0; j<(NUMSEATS/2); j++) {
-				seatToAdd = frontRows[i] + sideSeats[j];
-				availableSeats.add(seatToAdd);
-			}
-		}		
-		
-		// Middle back seats
-		for(int i=0; i<(NUMROWS/2); i++) {
-			for(int j=0; j<(NUMSEATS/2); j++) {
-				seatToAdd = backRows[i] + middleSeats[j];
-				availableSeats.add(seatToAdd);
-			}
-		}		
-		
-		// Side back seats 
-		for(int i=0; i<(NUMROWS/2); i++) {
-			for(int j=0; j<(NUMSEATS/2); j++) {
-				seatToAdd = backRows[i] + sideSeats[j];
-				availableSeats.add(seatToAdd);
-			}
-		}		
-		
+	public static void start(int portNumA, int portNumB, BatesRecitalHall a) throws IOException {
+		PORTA = portNumA;
+		PORTB = portNumB;
+		Runnable serverThreadA = new ThreadedTicketServer(portNumA,"A", a);
+		Thread t = new Thread(serverThreadA);
+		t.start();
+		Runnable serverThreadB = new ThreadedTicketServer(portNumB,"B", a);
+		Thread t1 = new Thread(serverThreadB);
+		t1.start();
 	}
+	
 }
 
 class ThreadedTicketServer implements Runnable {
-
+	
 	String hostname = "127.0.0.1";
 	String threadname = "X";
 	String testcase;
 	TicketClient sc;
+	BatesRecitalHall passed;
+	int portNum;
+	String serverName;
 
-	public void run() {
-		// TODO 422C
-		ServerSocket serverSocket;
-		try {
-			serverSocket = new ServerSocket(TicketServer.PORT);
-			Socket clientSocket = serverSocket.accept();
-			PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
-			BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+	public ThreadedTicketServer(int port, String name, BatesRecitalHall a) {
+		passed = a;
+		portNum = port;
+		serverName = name;
+	}
+	
+	@Override
+	public void  run() {
+		while(true){																							// Both servers run the same way
+			ServerSocket serverSocket;
+			try {
+					serverSocket = new ServerSocket(portNum);
+					Socket clientSocket = serverSocket.accept();
+					PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
+					BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+					String clientRequest = in.readLine();
+					if (clientRequest.equals("Request for a ticket")){
+						System.out.println("Server " + serverName + "; " + passed.bestFreeSeat());
+						out.println("Done");
+						try {
+							Thread.sleep(100);																			// How long the user will see the message
+						} 
+						catch (InterruptedException e) { }
+					}
+					in.close();
+					out.close();
+					clientSocket.close();
+					serverSocket.close();
+				} 
+			catch (IOException e) { }
 		}
-
 	}
 }
